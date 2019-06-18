@@ -1,0 +1,26 @@
+{
+    "name": "metafrastis/yandex-translate-php",
+    "description": "Free Yandex Translate API PHP Package",
+    "keywords": [
+        "yandex",
+        "translate",
+        "translator",
+        "php"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/metafrastis/yandex-translate-php",
+    "authors": [
+        {
+            "name": "Humberto Castelo Branco",
+            "email": "hlcb91@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Metafrastis\\YandexTranslate\\": "src/Metafrastis/YandexTranslate/"
+        }
+    }
+}
