@@ -6,6 +6,8 @@ class YandexTranslate {
 
     protected $sid;
     protected $queue = [];
+    protected $response;
+    protected $responses;
 
     public function translate($args = [], $opts = []) {
         $args['from'] = isset($args['from']) ? $args['from'] : null;
@@ -24,7 +26,7 @@ class YandexTranslate {
         if (!$args['sid']) {
             return false;
         }
-        $url = sprintf('https://translate.yandex.net/api/v1/tr.json/translate?id=%s-1-0&srv=tr-text&lang=%s-%s&reason=paste', $args['sid'], $args['from'], $args['to']);
+        $url = sprintf('https://translate.yandex.net/api/v1/tr.json/translate?id=%s-0-0&srv=tr-text&lang=%s-%s&reason=paste&format=text', rawurlencode($args['sid']), rawurlencode($args['from']), rawurlencode($args['to']));
         $headers = [
             'Accept: '.'*'.'/'.'*',
             'Accept-Language: en-US,en;q=0.5',
@@ -32,12 +34,15 @@ class YandexTranslate {
             'Content-Type: application/x-www-form-urlencoded',
             'Origin: https://translate.yandex.com',
             'Referer: https://translate.yandex.com/',
-            'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0',
+            'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:71.0) Gecko/20100101 Firefox/71.0',
         ];
         $params = ['text' => $args['text'], 'options' => '4'];
         $options = $opts;
         $queue = isset($args['queue']) ? $args['queue'] : false;
         $response = $this->post($url, $headers, $params, $options, $queue);
+        if (!$queue) {
+            $this->response = $response;
+        }
         if ($queue) {
             return;
         }
@@ -60,18 +65,22 @@ class YandexTranslate {
         if (!$args['sid']) {
             return false;
         }
-        $url = sprintf('https://translate.yandex.net/api/v1/tr.json/detect?sid=%s&srv=tr-text&text=%s&hint=&options=1', $args['sid'], rawurlencode($args['text']));
+        $hint = isset($args['from'], $args['to']) ? rawurlencode($args['from'].','.$args['to']) : '';
+        $url = sprintf('https://translate.yandex.net/api/v1/tr.json/detect?sid=%s&srv=tr-text&text=%s&hint=%s&options=1', rawurlencode($args['sid']), rawurlencode($args['text']), $hint);
         $headers = [
             'Accept: '.'*'.'/'.'*',
             'Accept-Language: en-US,en;q=0.5',
             'Connection: keep-alive',
             'Origin: https://translate.yandex.com',
             'Referer: https://translate.yandex.com/',
-            'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0',
+            'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:71.0) Gecko/20100101 Firefox/71.0',
         ];
         $options = $opts;
         $queue = isset($args['queue']) ? $args['queue'] : false;
         $response = $this->get($url, $headers, $options, $queue);
+        if (!$queue) {
+            $this->response = $response;
+        }
         if ($queue) {
             return;
         }
@@ -97,10 +106,13 @@ class YandexTranslate {
             'Connection: keep-alive',
             'Referer: https://translate.yandex.com/',
             'Upgrade-Insecure-Requests: 1',
-            'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0',
+            'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:71.0) Gecko/20100101 Firefox/71.0',
         ];
         $options = $opts;
         $response = $this->get($url, $headers, $options);
+        if (!$queue) {
+            $this->response = $response;
+        }
         if (preg_match('`SID[\x00-\x20\x7f]*\:[\x00-\x20\x7f]*[\x27]([^\x27]{8}\.[^\x27]{8}\.[^\x27]{8})[\x27]`', $response['body'], $match)) {
             $sid = strrev($match[1]);
         } elseif (preg_match('`SID[\x00-\x20\x7f]*\:[\x00-\x20\x7f]*[\x27]([^\x27]{26})[\x27]`', $response['body'], $match)) {
@@ -268,6 +280,14 @@ class YandexTranslate {
             $error = curl_error($ch);
             $errno = curl_errno($ch);
             curl_close($ch);
+            $response = [
+                'info' => $info,
+                'head' => $head,
+                'body' => $body,
+                'error' => $error,
+                'errno' => $errno,
+            ];
+            $this->responses[$key] = $response;
             $options = $this->queue[$key]['options'];
             if (strpos($options[CURLOPT_URL], 'tr.json/translate') !== false) {
                 $json = json_decode($body, true);
