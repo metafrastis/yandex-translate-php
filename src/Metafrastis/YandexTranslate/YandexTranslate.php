@@ -110,9 +110,7 @@ class YandexTranslate {
         ];
         $options = $opts;
         $response = $this->get($url, $headers, $options);
-        if (!$queue) {
-            $this->response = $response;
-        }
+        $this->response = $response;
         if (preg_match('`SID[\x00-\x20\x7f]*\:[\x00-\x20\x7f]*[\x27]([^\x27]{8}\.[^\x27]{8}\.[^\x27]{8})[\x27]`', $response['body'], $match)) {
             $sid = strrev($match[1]);
         } elseif (preg_match('`SID[\x00-\x20\x7f]*\:[\x00-\x20\x7f]*[\x27]([^\x27]{26})[\x27]`', $response['body'], $match)) {
