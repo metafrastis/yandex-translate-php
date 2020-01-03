@@ -198,7 +198,7 @@ class YandexTranslate {
         $opts[CURLOPT_HEADER] = true;
         $opts[CURLOPT_HTTPHEADER] = $headers;
         $opts[CURLOPT_POST] = true;
-        $opts[CURLOPT_POSTFIELDS] = http_build_query($params);
+        $opts[CURLOPT_POSTFIELDS] = is_array($params) || is_object($params) ? http_build_query($params) : $params;
         $opts[CURLOPT_RETURNTRANSFER] = true;
         $opts[CURLOPT_SSL_VERIFYHOST] = false;
         $opts[CURLOPT_SSL_VERIFYPEER] = false;
